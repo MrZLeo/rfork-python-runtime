@@ -16,7 +16,7 @@ def test_fork_start():
     COMMAND_FORK = "./run_fork.sh"
     #COMMAND_LOOP_RUN = "./run_baseline_loop.sh %d"
 
-    for i in range(TEST_TIMES):
+    for _ in range(TEST_TIMES):
         exec_ = os.popen(COMMAND_FORK)
         output_lines = exec_.read().strip().split('\n') # only contains parent output
 

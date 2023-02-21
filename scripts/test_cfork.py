@@ -9,6 +9,7 @@ USAGE="python3 test_baseline.py [test], test can be \"baseline\" or \"fork\"\nIf
 def test_fork_start():
     latencies = []
     ENDPOINT_BUNDLE="%s/.base/spin0/rootfs" %os.environ['HOME']
+    print(ENDPOINT_BUNDLE)
     COMMAND_FORK = "./run_fork.sh"
 
     for i in range(TEST_TIMES):
@@ -46,6 +47,7 @@ def test_baseline_start():
 
 
 def parse_output_lines(output_lines, test):
+    # print(test)
     invokeTime_pattern_line = TEST_INVOKETIME_PATTERN[test]
     startTime_pattern_line = "\'startTime\': 1[0-9]{12}"
     time_pattern = "1[0-9]{12}"
@@ -59,19 +61,19 @@ def parse_output_lines(output_lines, test):
             # print(line)
             invokeTime_line = line
             continue
-        
+
         startTime_match = re.search(startTime_pattern_line, line)
         if startTime_match != None:
             # print(line)
             startTime_line = line
-    
+
     if startTime_line == None or invokeTime_line == None:
         print("error output: can't find the startTime or invokeTime")
         exit()
     # Find the time value in the lines
     invokeTime_search = re.search(time_pattern, invokeTime_line)
     startTime_search = re.search(startTime_pattern_line, startTime_line)
-    
+
     invokeTime = invokeTime_line[invokeTime_search.span()[0]: invokeTime_search.span()[0] + 13]
     startTime = startTime_line[startTime_search.span()[1] - 13 : startTime_search.span()[1]]
 
@@ -95,12 +97,12 @@ def format_result(latencies, test):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) == 2: 
+    if len(sys.argv) == 2:
         if sys.argv[1] == "fork":
             test_fork_start()
         elif sys.argv[1] == "baseline":
             test_baseline_start()
-        else: 
+        else:
             print(USAGE)
     else:
         test_fork_start()

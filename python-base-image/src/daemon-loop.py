@@ -158,6 +158,7 @@ def main():
     global file_sock
     # print("daemon.py: main")
     file_sock = tornado.netutil.bind_unix_socket(file_sock_path)
+    # file_sock = tornado.netutil.bind_sockets(6666, "127.0.0.0")
     start_fork_server()
 
 if __name__ == '__main__':

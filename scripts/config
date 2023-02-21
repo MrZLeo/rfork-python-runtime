@@ -1,1 +1,2 @@
-RUNC=$(pwd)/../../runc/runc
+# RUNC=$(pwd)/../../runc/runc
+RUNC=/home/fedora/runc/runc

@@ -1,9 +1,6 @@
-#! /bin/bash
-source ./config
-RUNNING_CONTAINERS=`expr $(sudo $RUNC list | wc -l) - 1`
-# if no container is running, run the template and the endpoint container
-if (( $RUNNING_CONTAINERS == 0 )); then
-    pushd .
+set RUNC ~/runc/runc
+set -l RUNNING_CONTAINER $(math $(sudo $RUNC list | wc -l) - 1)
+if test $RUNNING_CONTAINER -eq 0
     cd ~/.base/container0
     sudo cp config-base.json config.json
     sudo $RUNC run -d python-test
@@ -12,8 +9,7 @@ if (( $RUNNING_CONTAINERS == 0 )); then
     sudo $RUNC run -d app-test
     echo "run app-test complete"
     echo "ready to fork..."
-    popd
     sleep 1s # wait for containers to complete startup
 else
     sudo $RUNC fork2container --zygote python-test --target app-test
-fi
+end

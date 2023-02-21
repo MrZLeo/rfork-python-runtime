@@ -1,6 +1,7 @@
 #!/bin/bash
-sudo runc delete -f app-test
-sudo runc delete -f python-test
+source ./config
+sudo $RUNC delete -f app-test
+sudo $RUNC delete -f python-test
 
 ## FIXME: try 100 times to delete runc containers
 #for i in {1..1000}
