@@ -18,38 +18,12 @@ import tornado.web
 import tornado.httpserver
 import tornado.netutil
 
-file_sock_path = 'fork.sock'
+file_sock_path = 'cfork/f.sk'
 file_sock = None
 
 # global variables:
 func = None
 funcName = None
-def start_app_server():
-    # print("daemon.py: start app server on fd: %d" % file_sock.fileno())
-
-    class SockFileHandler(tornado.web.RequestHandler):
-        def post(self):
-            try:
-                data = self.request.body
-                try :
-                    event = json.loads(data)
-                except:
-                    self.set_status(400)
-                    self.write('bad POST data: "%s"'%str(data))
-                    return
-                self.write(event)
-                tornado.ioloop.IOLoop.instance().stop() # Stop the server immediately after receiving the first request
-            except Exception:
-                self.set_status(500) # internal error
-                self.write(traceback.format_exc())
-
-    tornado_app = tornado.web.Application([
-        (".*", SockFileHandler),
-    ])
-    server = tornado.httpserver.HTTPServer(tornado_app)
-    server.add_socket(file_sock)
-    tornado.ioloop.IOLoop.instance().start()
-    server.start()
 
 def start_faas_server():
     global func
@@ -97,45 +71,27 @@ def start_fork_server():
 
     while True:
         client, info = file_sock.accept()
-        _, fds = recv_fds(client, 20, 5)
+        _, fds = recv_fds(client, 8, 2)
         pid = os.fork()
         target_fd = fds[0]
-        uts_namespace_fd = fds[1]
-        pid_namespace_fd = fds[2]
-        ipc_namespace_fd = fds[3]
-        mnt_namespace_fd = fds[4]
+        pid_fd = fds[1]
 
         if pid:
-            # the grand-parent process
-            # ret, exitcode = os.waitpid(pid, 0)
-            # end = time.perf_counter_ns()
-            # print('waitpid returns %d %d' % (ret, exitcode))
-            # client.sendall(bytes(str(pid), 'utf8'))
+            # the grand-parent process, catch next connection
             client.close()
             os.close(target_fd)
-            os.close(uts_namespace_fd)
-            os.close(pid_namespace_fd)
-            os.close(ipc_namespace_fd)
-            os.close(mnt_namespace_fd)
+            os.close(pid_fd)
         else:
             # the parent process
             os.fchdir(target_fd)
             os.chroot(".")
             os.close(target_fd)
-            # rv = ol.unshare()
-            # assert rv == 0
-            rv = ol.setns(uts_namespace_fd)
-            assert rv == 0
-            rv = ol.setns(pid_namespace_fd)
-            assert rv == 0
-            rv = ol.setns(ipc_namespace_fd)
-            assert rv == 0
-            rv = ol.setns(mnt_namespace_fd)
-            assert rv == 0
-            os.close(uts_namespace_fd)
-            os.close(pid_namespace_fd)
-            os.close(ipc_namespace_fd)
-            os.close(mnt_namespace_fd)
+
+            errno = ol.setns(pid_fd)
+            assert errno == 0
+            os.close(pid_fd)
+
+            # fork again to change pid namespace
             pid = os.fork()
             if pid:
                 # the parent process
@@ -146,19 +102,16 @@ def start_fork_server():
                 # the child process
                 file_sock.close()
                 file_sock = None
-
-                # file_sock_path = 'fork.sock' + '.' + str(os.getpid()) # + '.' + str(uuid.uuid4())
-                # file_sock = tornado.netutil.bind_unix_socket(file_sock_path)
                 client.close()
+
+                # real function entry
                 start_faas_server()
                 exit()
 
 
 def main():
     global file_sock
-    # print("daemon.py: main")
     file_sock = tornado.netutil.bind_unix_socket(file_sock_path)
-    # file_sock = tornado.netutil.bind_sockets(6666, "127.0.0.0")
     start_fork_server()
 
 if __name__ == '__main__':

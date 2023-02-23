@@ -1,11 +1,12 @@
 # FROM val01:5000/python-base-image:dev-base
 FROM ddnirvana/python-base-image:dev-base-3.6
-RUN mkdir /env
-COPY src/setup.py /env
 
-COPY src/ol.c /env
+COPY src/setup.py /
+COPY src/ol.c /
 
-RUN cd /env && python3 setup.py build_ext --inplace && mv ol.*.so /env/ol.so
+RUN python3 setup.py build_ext --inplace && mv ol.*.so ol.so
 
-COPY src/daemon.py /env
-COPY src/daemon-loop.py /env
+COPY src/daemon.py /
+COPY src/daemon-loop.py /
+
+CMD ["python3", "daemon-loop.py"]
