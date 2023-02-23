@@ -91,22 +91,15 @@ def start_fork_server():
             assert errno == 0
             os.close(pid_fd)
 
-            # fork again to change pid namespace
-            pid = os.fork()
-            if pid:
-                # the parent process
-                client.sendall(bytes(str(pid), 'utf8'))
-                client.close()
-                os._exit(0)
-            else:
-                # the child process
-                file_sock.close()
-                file_sock = None
-                client.close()
+            pid = os.getpid()
+            client.sendall(bytes(str(pid), 'utf8'))
+            client.close()
+            file_sock.close()
+            file_sock = None
 
-                # real function entry
-                start_faas_server()
-                exit()
+            # real function entry
+            start_faas_server()
+            exit()
 
 
 def main():
