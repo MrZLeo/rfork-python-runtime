@@ -2,6 +2,7 @@ import traceback
 import json
 import os
 import time
+from typing import NoReturn
 import ol
 import uuid
 import socket
@@ -17,6 +18,7 @@ import tornado.ioloop
 import tornado.web
 import tornado.httpserver
 import tornado.netutil
+from flask import Flask
 
 file_sock_path = 'cfork/f.sk'
 file_sock = None
@@ -25,32 +27,47 @@ file_sock = None
 func = None
 funcName = None
 
-def start_faas_server():
-    global func
-    sys.path.append("/code")
-    # load code
-    if func is None:
-        func = importlib.import_module('index')
+app = Flask(__name__)
+
+@app.route('/')
+def hello_world():
+    return 'Hello python!\n'
+
+def start_faas_server(port: int) -> None: 
+    app.run(host='0.0.0.0',port=port)
+    # global func
+    # sys.path.append("/code")
+    # # load code
+    # if func is None:
+    #     func = importlib.import_module('index')
 
     ####### hard code start ######
     # invoke the function
     # print("image_resize output: ")
-    f = open("/code/test.jpg", 'rb')
-    output = func.handler({'img': LoadTestImage(), 'height': 200, 'width': 200})
+    # f = open("/code/test.jpg", 'rb')
+    # output = func.handler({'img': LoadTestImage(), 'height': 200, 'width': 200})
     # print(output)
     ####### hard code end #######
-    while True:
-        time.sleep(1)
+    # sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    # sock.bind(("0.0.0.0", port))
+    # sock.listen()
+    # while True:
+    #     client, _ = sock.accept()
+    #     data = "hello python"
+    #     client.sendall(bytes(data, "utf-8"))
+    #     client.close()
+
+    # while True:
+    #     time.sleep(1)
         #print("I am not dead")
 
-    return
 
-def LoadTestImage():
-    f = open("/code/test.jpg", 'rb')
-    return str(base64.b64encode(f.read()), encoding='ascii')
-
-def Invoke():
-    return
+# def LoadTestImage():
+#     f = open("/code/test.jpg", 'rb')
+#     return str(base64.b64encode(f.read()), encoding='ascii')
+#
+# def Invoke():
+#     return
 
 # copied from https://docs.python.org/3/library/socket.html#socket.socket.recvmsg
 def recv_fds(sock, msglen, maxfds):
@@ -68,6 +85,8 @@ def start_fork_server():
     global file_sock_path
     # print("daemon.py: start fork server on fd: %d" % file_sock.fileno())
     file_sock.setblocking(True)
+
+    port = 8081
 
     while True:
         client, info = file_sock.accept()
@@ -98,7 +117,7 @@ def start_fork_server():
             file_sock = None
 
             # real function entry
-            start_faas_server()
+            start_faas_server(port)
             exit()
 
 
