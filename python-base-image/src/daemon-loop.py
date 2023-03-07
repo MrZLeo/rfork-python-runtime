@@ -33,7 +33,16 @@ app = Flask(__name__)
 def hello_world():
     return 'Hello python!\n'
 
-def start_faas_server(port: int) -> None: 
+
+def start_faas_server(port: int, enable_log: bool) -> None:
+    if enable_log == True:
+        # time that start serverless function
+        startTime = int(round(time.time() * 1000))
+        logf = open("log.txt", "w")
+        logf.write(str(startTime))
+        logf.close()
+
+
     app.run(host='0.0.0.0',port=port)
     # global func
     # sys.path.append("/code")
@@ -87,6 +96,7 @@ def start_fork_server():
     file_sock.setblocking(True)
 
     port = 8081
+    log_no = 1
 
     while True:
         client, info = file_sock.accept()
@@ -117,8 +127,13 @@ def start_fork_server():
             file_sock = None
 
             # real function entry
-            start_faas_server(port)
+            if log_no == 10:
+                start_faas_server(port, True)
+            else:
+                start_faas_server(port, False)
             exit()
+        port += 1
+        log_no += 1
 
 
 def main():
