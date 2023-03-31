@@ -34,14 +34,12 @@ def hello_world():
     return 'Hello python!\n'
 
 
-def start_faas_server(port: int, enable_log: bool) -> None:
-    if enable_log == True:
-        # time that start serverless function
-        startTime = int(round(time.time() * 1000))
-        logf = open("log.txt", "w")
-        logf.write(str(startTime))
-        logf.close()
-
+def start_faas_server(port: int, n: int) -> None:
+    # time that start serverless function
+    startTime = int(round(time.time() * 1000))
+    logf = open("log.txt", "a")
+    logf.write(str(n) + ": " + str(startTime) + "\n")
+    logf.close()
 
     app.run(host='0.0.0.0',port=port)
     # global func
@@ -127,10 +125,7 @@ def start_fork_server():
             file_sock = None
 
             # real function entry
-            if log_no == 10:
-                start_faas_server(port, True)
-            else:
-                start_faas_server(port, False)
+            start_faas_server(port, log_no)
             exit()
         port += 1
         log_no += 1
