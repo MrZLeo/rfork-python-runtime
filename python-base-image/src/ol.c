@@ -15,7 +15,7 @@ static PyObject *ol_setns(PyObject *module, PyObject *args)
     if (!PyArg_ParseTuple(args, "i", &fd))
         return Py_BuildValue("i", -1);
 
-    res = setns(fd, CLONE_NEWIPC | CLONE_NEWNET | CLONE_NEWNS | CLONE_NEWUTS);
+    res = setns(fd, CLONE_NEWIPC | CLONE_NEWNS | CLONE_NEWUTS);
     return Py_BuildValue("i", res);
 }
 
